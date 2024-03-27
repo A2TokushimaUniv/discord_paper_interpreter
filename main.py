@@ -7,7 +7,6 @@ from src.gpt import create_prompt, generate
 from logzero import logger
 from src.utils import remove_tmp_files
 from src.bot import (
-    read_format_prompt,
     build_image_blocks,
     SLACK_BOT_TOKEN,
     SLACK_APP_TOKEN,
@@ -39,12 +38,7 @@ def respond_to_mention(event, say):
     if "files" in event and len(event["files"]) > 0:
         for file in event["files"]:
             mimetype = file["mimetype"]
-            if mimetype == "text/plain" or mimetype == "text/markdown":
-                format_prompt = read_format_prompt(
-                    file["url_private_download"], SLACK_BOT_TOKEN
-                )
-                logger.info("User send format prompt by file.")
-            elif mimetype == "application/pdf":
+            if mimetype == "application/pdf":
                 url_list.append(
                     {"url": file["url_private_download"], "is_slack_upload": True}
                 )

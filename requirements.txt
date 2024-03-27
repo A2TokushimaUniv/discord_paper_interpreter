@@ -1,6 +1,6 @@
 langchain==0.0.329
 openai==0.28.1
-slack-bolt==1.18.0
+discord.py==2.3.2
 python-dotenv==1.00
 pymupdf==1.23.6
 tiktoken==0.5.1

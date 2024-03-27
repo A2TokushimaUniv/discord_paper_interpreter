@@ -1,6 +1,6 @@
 # paper_interpreter
 
-論文PDFを読み取り要約を返してくれるSlackボット
+論文PDFを読み取り要約を返してくれるDiscordボット
 
 <img src="./example.png" title="example">
 
@@ -13,7 +13,7 @@
   - 「OAuth & Permissions」の「Scopes」から、`app_mentions:read`,`im:read`, `chat:write`, `file:read`, `files:write`を追加する
     - 追加後に「Bot User OAuth Token」が生成されるので、これを`.env`の`SLACK_BOT_TOKEN`に格納する
   - 「OAuth & Permissions」「Install Worksspace」からSlackにボットを追加する
-- `.env`に環境変数を格納する
+- `.env`ファイルを作成し環境変数を格納する
   - MODELは`GPT3`か`GPT4`を選択
 ```.env
 OPEN_AI_API_KEY=xxxxx
