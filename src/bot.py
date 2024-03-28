@@ -1,10 +1,10 @@
 from logzero import logger
 import os
-from .utils import load_env
+# from .utils import load_env
 
-load_env()
-SLACK_BOT_TOKEN = os.environ.get("SLACK_BOT_TOKEN")
-SLACK_APP_TOKEN = os.environ.get("SLACK_APP_TOKEN")
+# load_env()
+# SLACK_BOT_TOKEN = os.environ.get("SLACK_BOT_TOKEN")
+# SLACK_APP_TOKEN = os.environ.get("SLACK_APP_TOKEN")
 
 
 def _add_mention(message, content):
