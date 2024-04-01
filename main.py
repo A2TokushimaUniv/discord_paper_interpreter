@@ -36,7 +36,14 @@ class MyClient(discord.Client):
         return url_list
 
     async def on_message(self, message):
+        # Ignore bot own messages.
         if message.author == self.user:
+            return
+        # Ignore if there is no mention when the message is not a DM.
+        if (
+            not isinstance(message.channel, discord.DMChannel)
+            and client.user not in message.mentions
+        ):
             return
 
         url_list = self._get_url_list(message)
