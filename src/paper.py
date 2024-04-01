@@ -15,7 +15,9 @@ def _is_pdf(tmp_file_name, http_response_obj):
 
 
 def download_pdf(url, save_path):
-    req = urllib.request.Request(url)
+    # add UserAgent for downalod pdf from https://cdn.discordapp.com/attachments/
+    headers = {"User-Agent": "Mozilla/4.0 (compatible; MSIE 5.5; Windows NT)"}
+    req = urllib.request.Request(url, None, headers)
     logger.info(f"Downloading pdf from {url}...")
     try:
         with urllib.request.urlopen(req) as web_file:

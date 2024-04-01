@@ -31,8 +31,8 @@ class MyClient(discord.Client):
         attachments = message.attachments
         if attachments:
             for attachment in attachments:
-                if os.path.splitext(attachment["filename"]) == ".pdf":
-                    url_list.append(attachment["url"])
+                if attachment.filename.endswith(".pdf"):
+                    url_list.append(attachment.url)
         return url_list
 
     async def on_message(self, message):
@@ -68,7 +68,7 @@ class MyClient(discord.Client):
             else:
                 await respond(
                     message,
-                    f"{url} から論文を読み取ることができませんでした。\n論文PDFのURLを指定してください。",
+                    f"{url} から論文を読み取ることができませんでした。",
                 )
                 return
 

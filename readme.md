@@ -1,18 +1,12 @@
-# paper_interpreter
+# discord_aper_interpreter
 
 論文PDFを読み取り要約を返してくれるDiscordボット
 
 <img src="./example.png" title="example">
 
 ## 実行方法
-- Slack APIの設定を行う. 2023年11月現在の設定方法は以下.
-  - 「App Home」のDisplay Nameと「Basic Information」のDisplay Informationを設定する
-  - 「Basic Information」の「App-Level Tokens」から`connections:write`スコープのトークンを生成する
-    - これを`.env`の`SLACK_APP_TOKEN`に格納する
-  - 「Socket Mode」と「Event Subscriptions」の「Enable Events」をOnにし、「Subscribe to bot events」から`app.mention`と`message.im`を選択する
-  - 「OAuth & Permissions」の「Scopes」から、`app_mentions:read`,`im:read`, `chat:write`, `file:read`, `files:write`を追加する
-    - 追加後に「Bot User OAuth Token」が生成されるので、これを`.env`の`SLACK_BOT_TOKEN`に格納する
-  - 「OAuth & Permissions」「Install Worksspace」からSlackにボットを追加する
+- [開発者ポータル](https://discord.com/developers/applications)からDiscordボットを新規作成し、Discordトークンを得る
+  - 参考：[Botを作る - discordpy-japan](https://scrapbox.io/discordpy-japan/Bot%E3%82%92%E4%BD%9C%E3%82%8B)
 - `.env`ファイルを作成し環境変数を格納する
   - MODELは`GPT3`か`GPT4`を選択
 ```.env
@@ -24,7 +18,7 @@ DISCORD_BOT_TOKEN=xxxxx
 - ボット宛てに、論文PDFのURLもしくはローカルのPDFをアップロードすると、要約が返ってくる
 
 ## 要約形式
-- `format.txt`の形式で論文が要約されます
+- `format.txt`の形式で論文が要約されます.
 
 ## 注意事項
 論文全文を読み取り、トークン数の多いChatGPTモデルに入力しています.
