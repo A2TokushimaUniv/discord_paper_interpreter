@@ -19,13 +19,11 @@ REQUEST_TIMEOUT = 300
 openai.api_key = os.environ.get("OPENAI_API_KEY")
 
 
-def create_prompt(format_prompt, paper_text):
+def create_prompt(paper_text):
     logger.info("Creating prompt...")
     # if user does'nt send format prompt of send blank files
-    if not format_prompt:
-        with open("./format.txt") as f:
-            format_prompt = f.read()
-
+    with open("./format.txt") as f:
+        format_prompt = f.read()
     prompt = f"{format_prompt}\n\n{paper_text}\n\n"
     return prompt
 

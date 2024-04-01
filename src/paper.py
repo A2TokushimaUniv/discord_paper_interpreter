@@ -14,23 +14,20 @@ def _is_pdf(tmp_file_name, http_response_obj):
     return "application/pdf" in content_type or "application/pdf" in mimetype
 
 
-def download_pdf(url_dic, save_path, slack_bot_token):
-    req = urllib.request.Request(url_dic["url"])
-    if url_dic["is_slack_upload"]:
-        req.add_header("Authorization", f"Bearer {slack_bot_token}")
-
-    logger.info(f'Downloading pdf from {url_dic["url"]}...')
+def download_pdf(url, save_path):
+    req = urllib.request.Request(url)
+    logger.info(f"Downloading pdf from {url}...")
     try:
         with urllib.request.urlopen(req) as web_file:
             with open(save_path, "wb") as local_file:
                 local_file.write(web_file.read())
 
             if not _is_pdf(save_path, web_file):
-                logger.warn(f'Content-type of {url_dic["url"]} is not application/pdf.')
+                logger.warn(f"Content-type of {url} is not application/pdf.")
                 os.remove(save_path)
                 return False
     except Exception as e:
-        logger.warning(f'Failed to download pdf from {url_dic["url"]}.')
+        logger.warning(f"Failed to download pdf from {url}.")
         logger.warning(f"Exception: {str(e)}")
         return False
 
