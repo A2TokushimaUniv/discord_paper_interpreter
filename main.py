@@ -1,118 +1,82 @@
-import os
+import discord
 import re
-from slack_bolt import App
-from slack_bolt.adapter.socket_mode import SocketModeHandler
-from src.paper import download_pdf, read
-from src.gpt import create_prompt, generate
 from logzero import logger
+from src.bot import respond
+from src.utils import load_dotenv
+from src.paper import download_pdf
+from src.paper import read
+from src.gpt import create_prompt, generate
 from src.utils import remove_tmp_files
-from src.bot import (
-    build_image_blocks,
-    SLACK_BOT_TOKEN,
-    SLACK_APP_TOKEN,
-    respond,
-)
+import os
 import uuid
 
-app = App(token=SLACK_BOT_TOKEN)
-TMP_FOLDER_NAME = "data"
+load_dotenv()
+DISCORD_BOT_TOKEN = os.environ.get("DISCORD_BOT_TOKEN")
+TMP_FOLDER_NAME = "tmp"
 
 
-@app.event("message")
-@app.event("app_mention")
-def respond_to_mention(event, say):
-    pattern = "https?://[\w/:%#\$&\?\(\)~\.=\+\-]+"
-    url_list = []
-    urls = re.findall(pattern, event["text"])
-    if urls:
-        for url in urls:
-            url_list.append({"url": url, "is_slack_upload": False})
+class MyClient(discord.Client):
+    async def on_ready(self):
+        print(f"Logged in as {self.user.name}")
 
-    user_text = re.sub(r"<[^>]*>", "", event["text"]).strip()
-    thread_id = event["ts"]
-    user_id = event["user"]
-    channel_id = event["channel"]
+    def _get_url_list(self, message):
+        url_list = []
+        pattern = "https?://[\w/:%#\$&\?\(\)~\.=\+\-]+"
+        urls = re.findall(pattern, message.content)
+        # paper URL from text message
+        if urls:
+            for url in urls:
+                url_list.append(url)
+        # paper URL from file attachments
+        attachments = message.attachments
+        if attachments:
+            for attachment in attachments:
+                if os.path.splitext(attachment["filename"]) == ".pdf":
+                    url_list.append(attachment["url"])
+        return url_list
 
-    # read user input and upload files
-    format_prompt = ""
-    if "files" in event and len(event["files"]) > 0:
-        for file in event["files"]:
-            mimetype = file["mimetype"]
-            if mimetype == "application/pdf":
-                url_list.append(
-                    {"url": file["url_private_download"], "is_slack_upload": True}
+    async def on_message(self, message):
+        if message.author == self.user:
+            return
+
+        url_list = self._get_url_list(message)
+        if not url_list:
+            logger.warning("User doesn't specify url.")
+            await respond(message, "論文PDFのURLを指定してください。")
+            return
+
+        image_save_paths = []
+        if not os.path.exists(TMP_FOLDER_NAME):
+            try:
+                os.makedirs(TMP_FOLDER_NAME)
+            except Exception as e:
+                print(f"Failed to make tmp folder: {e}")
+        for url in url_list:
+            tmp_pdf_file_name = f"paper_{str(uuid.uuid4())}_{os.path.basename(url)}"
+            pdf_save_path = os.path.join(TMP_FOLDER_NAME, tmp_pdf_file_name)
+            await respond(message, f"{url} から論文を読み取っています。")
+            is_success = download_pdf(url, pdf_save_path)
+
+            if is_success:
+                paper_text, image_save_paths = read(TMP_FOLDER_NAME, pdf_save_path)
+                prompt = create_prompt(paper_text)
+                await respond(message, "要約を生成中です。\n1~5分ほどかかります。\n")
+                answer = generate(prompt)
+                await respond(
+                    message, f"{url} の要約です。\n{answer}\n\n", files=image_save_paths
                 )
-    elif user_text:
-        format_prompt = user_text
-        logger.info("User send format prompt.")
+            else:
+                await respond(
+                    message,
+                    f"{url} から論文を読み取ることができませんでした。\n論文PDFのURLを指定してください。",
+                )
+                return
 
-    if not url_list:
-        logger.warning("User does'nt specify url.")
-        respond(
-            say, user_id, channel_id, thread_id, text="論文PDFのURLを指定してください。"
-        )
-
-    response = ""
-    image_save_paths = []
-    if not os.path.exists(TMP_FOLDER_NAME):
-        try:
-            os.makedirs(TMP_FOLDER_NAME)
-        except Exception as e:
-            print(f"Failed to make tmp folder: {e}")
-
-    for url_dic in url_list:
-        tmp_pdf_file_name = (
-            f'paper_{str(uuid.uuid4())}_{os.path.basename(url_dic["url"])}'
-        )
-        pdf_save_path = os.path.join(TMP_FOLDER_NAME, tmp_pdf_file_name)
-        respond(
-            say,
-            user_id,
-            channel_id,
-            thread_id,
-            text=f'{url_dic["url"]} から論文を読み取っています。',
-        )
-
-        is_success = download_pdf(url_dic, pdf_save_path, SLACK_BOT_TOKEN)
-
-        if is_success:
-            paper_text, image_save_paths = read(TMP_FOLDER_NAME, pdf_save_path)
-            prompt = create_prompt(format_prompt, paper_text)
-            respond(
-                say,
-                user_id,
-                channel_id,
-                thread_id,
-                text="要約を生成中です。\n1~5分ほどかかります。\n",
-            )
-            answer = generate(prompt)
-            response += f'{url_dic["url"]} の要約です。\n{answer}\n\n'
-
-            logger.info(f'Successfully generate summary from {url_dic["url"]}.')
-        else:
-            response += f'{url_dic["url"]} から論文を読み取ることができませんでした。\n論文PDFのURLを指定してください。'
-    respond(say, user_id, channel_id, thread_id, text=response)
-    if image_save_paths:
-        respond(
-            say,
-            user_id,
-            channel_id,
-            thread_id,
-            text="論文中の図表です。\n（うまく切り出せない場合もあります:man-bowing:）",
-        )
-        try:
-            respond(
-                say,
-                user_id,
-                channel_id,
-                thread_id,
-                blocks=build_image_blocks(image_save_paths, channel_id, thread_id),
-            )
-        except Exception as e:
-            logger.warning(f"Exception: {e}")
-    remove_tmp_files(pdf_save_path, image_save_paths)
-    logger.info("Successfully send response.")
+        remove_tmp_files(pdf_save_path, image_save_paths)
+        logger.info("Successfully send response.")
 
 
-if __name__ == "__main__":
-    SocketModeHandler(app, SLACK_APP_TOKEN).start()
+intents = discord.Intents.default()
+intents.message_content = True
+client = MyClient(intents=intents)
+client.run(DISCORD_BOT_TOKEN)

@@ -1,20 +1,19 @@
 from logzero import logger
-import os
-# from .utils import load_env
-
-# load_env()
-# SLACK_BOT_TOKEN = os.environ.get("SLACK_BOT_TOKEN")
-# SLACK_APP_TOKEN = os.environ.get("SLACK_APP_TOKEN")
+import discord
 
 
 def _add_mention(message, content):
     return f"{message.author.mention}\n{content}"
 
 
-
 async def respond(message, content, files=[]):
+    send_files = []
+    if files:
+        for file in files[:10]:
+            send_files.append(discord.File(file))
+
     try:
-        await message.channel.send(_add_mention(message, content), files=files[:10])
+        await message.channel.send(_add_mention(message, content), files=send_files)
     except Exception as e:
         logger.warning(f"Failed to respond. text={content}")
         logger.warning(f"Exception: {e}")

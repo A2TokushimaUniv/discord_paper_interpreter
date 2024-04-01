@@ -18,15 +18,13 @@
 ```.env
 OPEN_AI_API_KEY=xxxxx
 MODEL=GPT3
-SLACK_BOT_TOKEN=xxxxx
-SLACK_APP_TOKEN=xxxxx
+DISCORD_BOT_TOKEN=xxxxx
 ```
 - `docker compose up`でボットを起動する
 - ボット宛てに、論文PDFのURLもしくはローカルのPDFをアップロードすると、要約が返ってくる
 
 ## 要約形式
-- デフォルトでは`format.txt`の形式で論文が要約されます
-- Slackボットにテキストもしくは`.txt`, `.md`ファイルで要約形式を指定することもできます
+- `format.txt`の形式で論文が要約されます
 
 ## 注意事項
 論文全文を読み取り、トークン数の多いChatGPTモデルに入力しています.
