@@ -36,20 +36,26 @@ class MyClient(discord.Client):
         return url_list
 
     async def on_message(self, message):
+        is_dm = isinstance(message.channel, discord.DMChannel)
         # Ignore bot own messages.
         if message.author == self.user:
             return
         # Ignore if there is no mention when the message is not a DM.
-        if (
-            not isinstance(message.channel, discord.DMChannel)
-            and client.user not in message.mentions
-        ):
+        if not is_dm and client.user not in message.mentions:
             return
 
         url_list = self._get_url_list(message)
+        mention = message.author.mention
+        if is_dm:
+            dest = message.channel
+        else:
+            dest = await message.create_thread(
+                name=f"{url_list[0]}の要約結果", auto_archive_duration=60
+            )
+
         if not url_list:
             logger.warning("User doesn't specify url.")
-            await respond(message, "論文PDFのURLを指定してください。")
+            await respond(dest, mention, "論文PDFのURLを指定してください。")
             return
 
         image_save_paths = []
@@ -61,20 +67,26 @@ class MyClient(discord.Client):
         for url in url_list:
             tmp_pdf_file_name = f"paper_{str(uuid.uuid4())}_{os.path.basename(url)}"
             pdf_save_path = os.path.join(TMP_FOLDER_NAME, tmp_pdf_file_name)
-            await respond(message, f"{url} から論文を読み取っています。")
+            await respond(dest, mention, f"{url} から論文を読み取っています。")
             is_success = download_pdf(url, pdf_save_path)
 
             if is_success:
                 paper_text, image_save_paths = read(TMP_FOLDER_NAME, pdf_save_path)
                 prompt = create_prompt(paper_text)
-                await respond(message, "要約を生成中です。\n1~5分ほどかかります。\n")
+                await respond(
+                    dest, mention, "要約を生成中です。\n1~5分ほどかかります。\n"
+                )
                 answer = generate(prompt)
                 await respond(
-                    message, f"{url} の要約です。\n{answer}\n\n", files=image_save_paths
+                    dest,
+                    mention,
+                    f"{url} の要約です。\n{answer}\n\n",
+                    files=image_save_paths,
                 )
             else:
                 await respond(
-                    message,
+                    dest,
+                    mention,
                     f"{url} から論文を読み取ることができませんでした。",
                 )
                 return
