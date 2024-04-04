@@ -1,6 +1,6 @@
 import openai
 from langchain.chat_models import ChatOpenAI
-from langchain.schema import HumanMessage, SystemMessage
+from langchain.schema import HumanMessage
 import os
 from logzero import logger
 from .utils import load_env
@@ -36,9 +36,7 @@ def generate(prompt):
         request_timeout=REQUEST_TIMEOUT,
     )
 
-    CHARACTER_PROMPT = "あなたはAIに関する研究を行っている専門家です。"
     messages = [
-        SystemMessage(content=CHARACTER_PROMPT),
         HumanMessage(content=prompt),
     ]
 
