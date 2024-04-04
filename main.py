@@ -23,24 +23,21 @@ class MyClient(discord.Client):
         url_list = []
         pattern = "https?://[\w/:%#\$&\?\(\)~\.=\+\-]+"
         urls = re.findall(pattern, message.content)
-        # paper URL from text message
+        # URL from text message
         if urls:
             for url in urls:
                 url_list.append(url)
-        # paper URL from file attachments
-        attachments = message.attachments
-        if attachments:
-            for attachment in attachments:
-                if attachment.filename.endswith(".pdf"):
-                    url_list.append(attachment.url)
+        # URL from file attachments
+        for attachment in message.attachments:
+            url_list.append(attachment.url)
         return url_list
 
     async def on_message(self, message):
         is_dm = isinstance(message.channel, discord.DMChannel)
-        # Ignore bot own messages.
+        # ignore bot own messages.
         if message.author == self.user:
             return
-        # Ignore if there is no mention when the message is not a DM.
+        # ignore if there is no mention when the message is not a DM.
         if not is_dm and client.user not in message.mentions:
             return
 
@@ -49,13 +46,18 @@ class MyClient(discord.Client):
         if is_dm:
             dest = message.channel
         else:
+            # create thread for response summary
             dest = await message.create_thread(
                 name=f"{url_list[0]}の要約結果", auto_archive_duration=60
             )
 
         if not url_list:
             logger.warning("User doesn't specify url.")
-            await respond(dest, mention, "論文PDFのURLを指定してください。")
+            await respond(
+                dest,
+                mention,
+                "論文PDFのURLを指定、もしくはPDFをアップロードしてください。",
+            )
             return
 
         image_save_paths = []
@@ -64,6 +66,8 @@ class MyClient(discord.Client):
                 os.makedirs(TMP_FOLDER_NAME)
             except Exception as e:
                 print(f"Failed to make tmp folder: {e}")
+
+        # response summary for each url
         for url in url_list:
             tmp_pdf_file_name = f"paper_{str(uuid.uuid4())}_{os.path.basename(url)}"
             pdf_save_path = os.path.join(TMP_FOLDER_NAME, tmp_pdf_file_name)
@@ -87,7 +91,7 @@ class MyClient(discord.Client):
                 await respond(
                     dest,
                     mention,
-                    f"{url} から論文を読み取ることができませんでした。",
+                    f"{url} から論文を読み取ることができませんでした。PDFの形式が正しくない可能性があります。",
                 )
                 return
 
