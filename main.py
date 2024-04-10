@@ -48,7 +48,7 @@ class MyClient(discord.Client):
         else:
             # create thread for response summary
             dest = await message.create_thread(
-                name=f"{url_list[0]}の要約結果", auto_archive_duration=60
+                name=f"{url_list[0][:50]}の要約結果", auto_archive_duration=60
             )
 
         if not url_list:
