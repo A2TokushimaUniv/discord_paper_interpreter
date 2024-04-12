@@ -4,6 +4,7 @@ from logzero import logger
 import fitz
 import mimetypes
 import uuid
+import time
 
 
 def _is_pdf(tmp_file_name, http_response_obj):
@@ -14,8 +15,7 @@ def _is_pdf(tmp_file_name, http_response_obj):
     return "application/pdf" in content_type or "application/pdf" in mimetype
 
 
-def download_pdf(url, is_upload, save_path):
-    # add UserAgent for downalod pdf from https://cdn.discordapp.com/attachments/
+def download_pdf(url, is_upload, save_path, max_retries=5, retry_delay=1):
     headers = (
         {"User-Agent": "Mozilla/4.0 (compatible; MSIE 5.5; Windows NT)"}
         if is_upload
@@ -23,21 +23,31 @@ def download_pdf(url, is_upload, save_path):
     )
     req = urllib.request.Request(url, None, headers)
     logger.info(f"Downloading pdf from {url}...")
-    try:
-        with urllib.request.urlopen(req) as web_file:
-            with open(save_path, "wb") as local_file:
-                local_file.write(web_file.read())
 
-            if not _is_pdf(save_path, web_file):
-                logger.warn(f"Content-type of {url} is not application/pdf.")
-                os.remove(save_path)
-                return False
-    except Exception as e:
-        logger.warning(f"Failed to download pdf from {url}.")
-        logger.warning(f"Exception: {str(e)}")
-        return False
+    retries = 0
+    while retries < max_retries:
+        try:
+            with urllib.request.urlopen(req) as web_file:
+                with open(save_path, "wb") as local_file:
+                    local_file.write(web_file.read())
 
-    return True
+                if not _is_pdf(save_path, web_file):
+                    logger.warn(f"Content-type of {url} is not application/pdf.")
+                    os.remove(save_path)
+                    return False
+        except Exception as e:
+            retries += 1
+            logger.warning(
+                f"Failed to download pdf from {url}. Retrying ({retries}/{max_retries})..."
+            )
+            logger.warning(f"Exception: {str(e)}")
+            time.sleep(retry_delay)
+            continue
+
+        return True
+
+    logger.error(f"Failed to download pdf from {url} after {max_retries} retries.")
+    return False
 
 
 # See: https://github.com/pymupdf/PyMuPDF-Utilities/blob/master/examples/extract-images/extract-from-pages.py
