@@ -26,10 +26,10 @@ class MyClient(discord.Client):
         # URL from text message
         if urls:
             for url in urls:
-                url_list.append({"url": url, "is_upload": False})
+                url_list.append({"url": url.strip(), "is_upload": False})
         # URL from file attachments
         for attachment in message.attachments:
-            url_list.append({"url": attachment.url, "is_upload": True})
+            url_list.append({"url": attachment.url.strip(), "is_upload": True})
         return url_list
 
     async def on_message(self, message):
