@@ -26,10 +26,10 @@ class MyClient(discord.Client):
         # URL from text message
         if urls:
             for url in urls:
-                url_list.append(url)
+                url_list.append({"url": url, "is_upload": False})
         # URL from file attachments
         for attachment in message.attachments:
-            url_list.append(attachment.url)
+            url_list.append({"url": attachment.url, "is_upload": True})
         return url_list
 
     async def on_message(self, message):
@@ -48,7 +48,7 @@ class MyClient(discord.Client):
         else:
             # create thread for response summary
             dest = await message.create_thread(
-                name=f"{url_list[0][:50]}の要約結果", auto_archive_duration=60
+                name=f"{url_list[0]['url'][:50]}の要約結果", auto_archive_duration=60
             )
 
         if not url_list:
@@ -68,11 +68,17 @@ class MyClient(discord.Client):
                 print(f"Failed to make tmp folder: {e}")
 
         # response summary for each url
-        for url in url_list:
-            tmp_pdf_file_name = f"paper_{str(uuid.uuid4())}_{os.path.basename(url)}"
+        for url_dic in url_list:
+            tmp_pdf_file_name = (
+                f"paper_{str(uuid.uuid4())}_{os.path.basename(url_dic['url'])}"
+            )
             pdf_save_path = os.path.join(TMP_FOLDER_NAME, tmp_pdf_file_name)
-            await respond(dest, mention, f"{url} から論文を読み取っています。")
-            is_success = download_pdf(url, pdf_save_path)
+            await respond(
+                dest, mention, f"{url_dic['url']} から論文を読み取っています。"
+            )
+            is_success = download_pdf(
+                url_dic["url"], url_dic["is_upload"], pdf_save_path
+            )
 
             if is_success:
                 paper_text, image_save_paths = read(TMP_FOLDER_NAME, pdf_save_path)
@@ -84,14 +90,14 @@ class MyClient(discord.Client):
                 await respond(
                     dest,
                     mention,
-                    f"{url} の要約です。\n{answer}\n\n",
+                    f"{url_dic['url']} の要約です。\n{answer}\n\n",
                     files=image_save_paths,
                 )
             else:
                 await respond(
                     dest,
                     mention,
-                    f"{url} から論文を読み取ることができませんでした。PDFの形式が正しくない可能性があります。",
+                    f"{url_dic['url']} から論文を読み取ることができませんでした。PDFの形式が正しくない可能性があります。",
                 )
                 return
 

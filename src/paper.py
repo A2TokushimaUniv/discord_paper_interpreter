@@ -14,9 +14,13 @@ def _is_pdf(tmp_file_name, http_response_obj):
     return "application/pdf" in content_type or "application/pdf" in mimetype
 
 
-def download_pdf(url, save_path):
+def download_pdf(url, is_upload, save_path):
     # add UserAgent for downalod pdf from https://cdn.discordapp.com/attachments/
-    headers = {"User-Agent": "Mozilla/4.0 (compatible; MSIE 5.5; Windows NT)"}
+    headers = (
+        {"User-Agent": "Mozilla/4.0 (compatible; MSIE 5.5; Windows NT)"}
+        if is_upload
+        else {}
+    )
     req = urllib.request.Request(url, None, headers)
     logger.info(f"Downloading pdf from {url}...")
     try:
