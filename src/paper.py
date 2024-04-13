@@ -15,7 +15,7 @@ def _is_pdf(tmp_file_name, http_response_obj):
     return "application/pdf" in content_type or "application/pdf" in mimetype
 
 
-def download_pdf(url, is_upload, save_path, max_retries=5, retry_delay=1):
+def download_pdf(url, is_upload, save_path, max_retries=5, retry_delay=3):
     headers = (
         {"User-Agent": "Mozilla/4.0 (compatible; MSIE 5.5; Windows NT)"}
         if is_upload

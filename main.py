@@ -56,7 +56,7 @@ class MyClient(discord.Client):
             await respond(
                 dest,
                 mention,
-                "論文PDFのURLを指定、もしくはPDFをアップロードしてください。",
+                "論文PDFのURLを送信するか、PDFをアップロードしてください。",
             )
             return
 
@@ -97,7 +97,7 @@ class MyClient(discord.Client):
                 await respond(
                     dest,
                     mention,
-                    f"{url_dic['url']} から論文を読み取ることができませんでした。PDFの形式が正しくない可能性があります。",
+                    f"{url_dic['url']} から正しく論文を読み取ることができませんでした。再度URLを送信するかURLを変更してみてください。",
                 )
                 return
 
