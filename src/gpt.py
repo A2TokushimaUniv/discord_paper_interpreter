@@ -1,5 +1,5 @@
 import openai
-from langchain.chat_models import ChatOpenAI
+from langchain_openai import ChatOpenAI
 from langchain.schema import HumanMessage
 import os
 from logzero import logger
@@ -10,8 +10,8 @@ load_env()
 # https://platform.openai.com/docs/models
 # gpt-4-32k is not available from OpenAI API
 # https://help.openai.com/en/articles/7102672-how-can-i-access-gpt-4
-MODEL_NAME = {"GPT3": "gpt-3.5-turbo-16k", "GPT4": "gpt-4-32k"}
-MODEL_MAX_TOKENS = {"GPT3": 16000, "GPT4": 32000}
+MODEL_NAME = {"GPT3": "gpt-3.5-turbo", "GPT4": "gpt-4-turbo", "GPT4o": "gpt-4o"}
+MODEL_MAX_TOKENS = {"GPT3": 16000, "GPT4": 128000, "GPT4o": 128000}
 RESPONSE_MAX_TOKENS = 1000
 model_env = os.environ.get("MODEL", "GPT3")
 MODEL = model_env if model_env in list(MODEL_NAME.keys()) else "GPT3"

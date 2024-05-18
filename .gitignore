@@ -295,4 +295,5 @@ ipython_config.py
 
 *.out
 *.pdf
+data/
 tmp/

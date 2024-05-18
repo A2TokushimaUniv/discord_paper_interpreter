@@ -12,7 +12,7 @@ import uuid
 
 load_dotenv()
 DISCORD_BOT_TOKEN = os.environ.get("DISCORD_BOT_TOKEN")
-TMP_FOLDER_NAME = "tmp"
+DATA_FOLDER_NAME = "data"
 
 
 class MyClient(discord.Client):
@@ -61,9 +61,9 @@ class MyClient(discord.Client):
             return
 
         image_save_paths = []
-        if not os.path.exists(TMP_FOLDER_NAME):
+        if not os.path.exists(DATA_FOLDER_NAME):
             try:
-                os.makedirs(TMP_FOLDER_NAME)
+                os.makedirs(DATA_FOLDER_NAME)
             except Exception as e:
                 print(f"Failed to make tmp folder: {e}")
 
@@ -72,7 +72,7 @@ class MyClient(discord.Client):
             tmp_pdf_file_name = (
                 f"paper_{str(uuid.uuid4())}_{os.path.basename(url_dic['url'])}"
             )
-            pdf_save_path = os.path.join(TMP_FOLDER_NAME, tmp_pdf_file_name)
+            pdf_save_path = os.path.join(DATA_FOLDER_NAME, tmp_pdf_file_name)
             await respond(
                 dest, mention, f"{url_dic['url']} から論文を読み取っています。"
             )
@@ -81,7 +81,7 @@ class MyClient(discord.Client):
             )
 
             if is_success:
-                paper_text, image_save_paths = read(TMP_FOLDER_NAME, pdf_save_path)
+                paper_text, image_save_paths = read(DATA_FOLDER_NAME, pdf_save_path)
                 prompt = create_prompt(paper_text)
                 await respond(
                     dest, mention, "要約を生成中です。\n1~5分ほどかかります。\n"
