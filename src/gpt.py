@@ -1,6 +1,6 @@
 import openai
 from langchain_openai import ChatOpenAI
-from langchain.schema import HumanMessage
+from langchain.schema import HumanMessage, SystemMessage
 import os
 from logzero import logger
 from .utils import load_env
@@ -16,6 +16,7 @@ RESPONSE_MAX_TOKENS = 1000
 model_env = os.environ.get("MODEL", "GPT3")
 MODEL = model_env if model_env in list(MODEL_NAME.keys()) else "GPT3"
 REQUEST_TIMEOUT = 300
+SYSTEM_PROMPT = "あなたはAIに関する研究を行っている専門家です。"
 openai.api_key = os.environ.get("OPENAI_API_KEY")
 
 
@@ -37,6 +38,7 @@ def generate(prompt):
     )
 
     messages = [
+        SystemMessage(SYSTEM_PROMPT),
         HumanMessage(content=prompt),
     ]
 
@@ -49,6 +51,7 @@ def generate(prompt):
             f"The token size of the input to {MODEL_NAME[MODEL]} is {token_size}."
         )
         try:
+            # WARNING: refactor to use LCEL
             response = chat(messages)
             response = response.content
         except Exception as e:
