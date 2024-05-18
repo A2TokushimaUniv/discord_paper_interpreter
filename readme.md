@@ -8,10 +8,10 @@
 - [開発者ポータル](https://discord.com/developers/applications)からDiscordボットを新規作成し、Discordトークンを得る
   - 参考：[Botを作る - discordpy-japan](https://scrapbox.io/discordpy-japan/Bot%E3%82%92%E4%BD%9C%E3%82%8B)
 - `.env`ファイルを作成し環境変数を格納する
-  - MODELは`GPT3`か`GPT4`を選択
+  - MODELは`GPT3`(`gpt-3.5-turbo`), `GPT4`(`gpt-4-turbo`), `GPT4o`(`gpt-4o`)からを選択する
 ```.env
 OPEN_AI_API_KEY=xxxxx
-MODEL=GPT3
+MODEL=GPT4o
 DISCORD_BOT_TOKEN=xxxxx
 ```
 - `docker compose up`でボットを起動する

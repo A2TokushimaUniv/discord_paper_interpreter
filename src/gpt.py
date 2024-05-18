@@ -1,6 +1,6 @@
 import openai
-from langchain.chat_models import ChatOpenAI
-from langchain.schema import HumanMessage
+from langchain_openai import ChatOpenAI
+from langchain.schema import HumanMessage, SystemMessage
 import os
 from logzero import logger
 from .utils import load_env
@@ -10,12 +10,13 @@ load_env()
 # https://platform.openai.com/docs/models
 # gpt-4-32k is not available from OpenAI API
 # https://help.openai.com/en/articles/7102672-how-can-i-access-gpt-4
-MODEL_NAME = {"GPT3": "gpt-3.5-turbo-16k", "GPT4": "gpt-4-32k"}
-MODEL_MAX_TOKENS = {"GPT3": 16000, "GPT4": 32000}
+MODEL_NAME = {"GPT3": "gpt-3.5-turbo", "GPT4": "gpt-4-turbo", "GPT4o": "gpt-4o"}
+MODEL_MAX_TOKENS = {"GPT3": 16000, "GPT4": 128000, "GPT4o": 128000}
 RESPONSE_MAX_TOKENS = 1000
 model_env = os.environ.get("MODEL", "GPT3")
 MODEL = model_env if model_env in list(MODEL_NAME.keys()) else "GPT3"
 REQUEST_TIMEOUT = 300
+SYSTEM_PROMPT = "あなたはAIに関する研究を行っている専門家です。"
 openai.api_key = os.environ.get("OPENAI_API_KEY")
 
 
@@ -37,6 +38,7 @@ def generate(prompt):
     )
 
     messages = [
+        SystemMessage(SYSTEM_PROMPT),
         HumanMessage(content=prompt),
     ]
 
@@ -49,6 +51,7 @@ def generate(prompt):
             f"The token size of the input to {MODEL_NAME[MODEL]} is {token_size}."
         )
         try:
+            # WARNING: refactor to use LCEL
             response = chat(messages)
             response = response.content
         except Exception as e:
