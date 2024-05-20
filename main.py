@@ -93,13 +93,14 @@ class MyClient(discord.Client):
                     f"{url_dic['url']} の要約です。\n{answer}\n\n",
                     files=image_save_paths,
                 )
+                continue
             else:
                 await respond(
                     dest,
                     mention,
                     f"{url_dic['url']} から正しく論文を読み取ることができませんでした。再度URLを送信するかURLを変更してみてください。",
                 )
-                return
+                continue
 
         remove_tmp_files(pdf_save_path, image_save_paths)
         logger.info("Successfully send response.")
