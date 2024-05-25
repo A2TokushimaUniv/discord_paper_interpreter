@@ -1,4 +1,4 @@
-# discord_aper_interpreter
+# discord_paper_interpreter
 
 論文PDFを読み取り要約を返してくれるDiscordボット
 

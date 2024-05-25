@@ -12,7 +12,7 @@ load_env()
 # https://help.openai.com/en/articles/7102672-how-can-i-access-gpt-4
 MODEL_NAME = {"GPT3": "gpt-3.5-turbo", "GPT4": "gpt-4-turbo", "GPT4o": "gpt-4o"}
 MODEL_MAX_TOKENS = {"GPT3": 16000, "GPT4": 128000, "GPT4o": 128000}
-RESPONSE_MAX_TOKENS = 1000
+RESPONSE_MAX_TOKENS = 1024
 model_env = os.environ.get("MODEL", "GPT3")
 MODEL = model_env if model_env in list(MODEL_NAME.keys()) else "GPT3"
 REQUEST_TIMEOUT = 300
