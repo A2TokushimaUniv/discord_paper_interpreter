@@ -9,10 +9,12 @@ from src.gpt import create_prompt, generate
 from src.utils import remove_tmp_files
 import os
 import uuid
+from src.lang import FAIL_MESSAGES, WAIT_MESSAGES, RESULTS_MESSAGES, get_thread_name
 
 load_dotenv()
 DISCORD_BOT_TOKEN = os.environ.get("DISCORD_BOT_TOKEN")
-DATA_FOLDER_NAME = "data"
+DATA_FOLDER_NAME = "paper"
+LANG = os.environ.get("RESPOND_LANG", "ja")
 
 
 class MyClient(discord.Client):
@@ -48,7 +50,8 @@ class MyClient(discord.Client):
         else:
             # create thread for response summary
             dest = await message.create_thread(
-                name=f"{url_list[0]['url'][:50]}の要約結果", auto_archive_duration=60
+                name=get_thread_name(url_list[0]["url"][:50], LANG),
+                auto_archive_duration=60,
             )
 
         if not url_list:
@@ -56,7 +59,7 @@ class MyClient(discord.Client):
             await respond(
                 dest,
                 mention,
-                "論文PDFのURLを送信するか、PDFをアップロードしてください。",
+                FAIL_MESSAGES["UploadNotPDF"][LANG],
             )
             return
 
@@ -73,9 +76,7 @@ class MyClient(discord.Client):
                 f"paper_{str(uuid.uuid4())}_{os.path.basename(url_dic['url'])}"
             )
             pdf_save_path = os.path.join(DATA_FOLDER_NAME, tmp_pdf_file_name)
-            await respond(
-                dest, mention, f"{url_dic['url']} から論文を読み取っています。"
-            )
+            await respond(dest, mention, WAIT_MESSAGES["Reading"][LANG])
             is_success = download_pdf(
                 url_dic["url"], url_dic["is_upload"], pdf_save_path
             )
@@ -83,23 +84,17 @@ class MyClient(discord.Client):
             if is_success:
                 paper_text, image_save_paths = read(DATA_FOLDER_NAME, pdf_save_path)
                 prompt = create_prompt(paper_text)
-                await respond(
-                    dest, mention, "要約を生成中です。\n1~5分ほどかかります。\n"
-                )
+                await respond(dest, mention, WAIT_MESSAGES["Generating"][LANG])
                 answer = generate(prompt)
                 await respond(
                     dest,
                     mention,
-                    f"{url_dic['url']} の要約です。\n{answer}\n\n",
+                    f"{RESULTS_MESSAGES['Result'][LANG]}\n{answer}\n\n",
                     files=image_save_paths,
                 )
                 continue
             else:
-                await respond(
-                    dest,
-                    mention,
-                    f"{url_dic['url']} から正しく論文を読み取ることができませんでした。再度URLを送信するかURLを変更してみてください。",
-                )
+                await respond(dest, mention, FAIL_MESSAGES["CannotReadPaper"][LANG])
                 continue
 
         remove_tmp_files(pdf_save_path, image_save_paths)
