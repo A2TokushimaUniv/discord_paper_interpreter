@@ -4,6 +4,7 @@ from langchain.schema import HumanMessage, SystemMessage
 import os
 from logzero import logger
 from .utils import load_env
+from .lang import SYSTEM_PROMPT, FAIL_MESSAGES
 
 load_env()
 # huge max tokens model
@@ -14,16 +15,16 @@ MODEL_NAME = {"GPT3": "gpt-3.5-turbo", "GPT4": "gpt-4-turbo", "GPT4o": "gpt-4o"}
 MODEL_MAX_TOKENS = {"GPT3": 16000, "GPT4": 128000, "GPT4o": 128000}
 RESPONSE_MAX_TOKENS = 1024
 model_env = os.environ.get("MODEL", "GPT3")
+LANG = os.environ.get("RESPOND_LANG", "ja")
 MODEL = model_env if model_env in list(MODEL_NAME.keys()) else "GPT3"
 REQUEST_TIMEOUT = 300
-SYSTEM_PROMPT = "あなたはAIに関する研究を行っている専門家です。"
 openai.api_key = os.environ.get("OPENAI_API_KEY")
 
 
 def create_prompt(paper_text):
     logger.info("Creating prompt...")
     # if user does'nt send format prompt of send blank files
-    with open("./format.txt") as f:
+    with open(f"./data/format_{LANG}.txt") as f:
         format_prompt = f.read()
     prompt = f"{format_prompt}\n\n{paper_text}\n\n"
     return prompt
@@ -38,7 +39,7 @@ def generate(prompt):
     )
 
     messages = [
-        SystemMessage(SYSTEM_PROMPT),
+        SystemMessage(SYSTEM_PROMPT[LANG]),
         HumanMessage(content=prompt),
     ]
 
@@ -57,8 +58,8 @@ def generate(prompt):
         except Exception as e:
             logger.error("Failed to request to ChatGPT!")
             logger.error(f"Exception: {str(e)}")
-            response = "ChatGPTへのリクエストが失敗しました。\nタイムアウトになっているか、OpenAI APIのRateLimitに引っかかっている可能性があります。少し待ってから論文URLを再送してみてください。"
+            response = FAIL_MESSAGES["RequestFail"][LANG]
     else:
         logger.warning("The token size is too large, so the tail is cut off.")
-        response = "論文の文章量が大きすぎたため、要約できませんでした。"
+        response = FAIL_MESSAGES["PaperSizeFail"][LANG]
     return response
