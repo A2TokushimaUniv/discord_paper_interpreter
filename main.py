@@ -14,6 +14,7 @@ from src.lang import FAIL_MESSAGES, WAIT_MESSAGES, RESULTS_MESSAGES, get_thread_
 load_dotenv()
 DISCORD_BOT_TOKEN = os.environ.get("DISCORD_BOT_TOKEN")
 DATA_FOLDER_NAME = "paper"
+DISCORD_RESPONSE_LIMIT = 2000
 LANG = os.environ.get("RESPOND_LANG", "ja")
 
 
@@ -86,10 +87,13 @@ class MyClient(discord.Client):
                 prompt = create_prompt(paper_text)
                 await respond(dest, mention, WAIT_MESSAGES["Generating"][LANG])
                 answer = generate(prompt)
+                response = f"{RESULTS_MESSAGES['Result'][LANG]}\n{answer}\n\n"[
+                    :DISCORD_RESPONSE_LIMIT
+                ]
                 await respond(
                     dest,
                     mention,
-                    f"{RESULTS_MESSAGES['Result'][LANG]}\n{answer}\n\n",
+                    response,
                     files=image_save_paths,
                 )
                 continue
