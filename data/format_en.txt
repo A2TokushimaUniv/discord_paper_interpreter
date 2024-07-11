@@ -1,0 +1,16 @@
+After reading and understanding the content of the following paper, please answer the following five questions.
+Please use the original language except for general terms.
+
+- In a few words, what is your research?
+
+- What is great about it compared to previous research? Where is the novelty?
+
+- What is the main point of the technique or method?
+
+- How did you evaluate/validate the methods as effective?
+
+- Is there room for discussion and improvement?
+
+Below is the paper.
+
+
